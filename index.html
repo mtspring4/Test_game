@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 7.4.7.2 (Linux)"/>
+	<meta name="created" content="00:00:00"/>
+	<meta name="changed" content="00:00:00"/>
+	<style type="text/css">
+		@page { size: 8.27in 11.69in; margin: 0.79in }
+		p { line-height: 115%; margin-bottom: 0.1in; background: transparent }
+		pre { background: transparent }
+		pre.western { font-family: "Liberation Mono", monospace; font-size: 10pt }
+		pre.cjk { font-family: "Noto Sans Mono CJK SC", monospace; font-size: 10pt }
+		pre.ctl { font-family: "Liberation Mono", monospace; font-size: 10pt }
+	</style>
+</head>
+<body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><pre class="western">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no&quot;&gt;
+    &lt;title&gt;Alice in Puzzleland - Story Rich Edition&lt;/title&gt;
+    &lt;style&gt;
+        :root {
+            --alice-blue: #a0d8ef;
+            --heart-red: #e63946;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #2b2d42;
+            --hint-gold: #ffcc00;
+            --mission-glow: #00ffcc;
+            --gift-pink: #ff69b4;
+            --retry-blue: #4facfe;
+            --clear-gold: #ffd700;
+            
+            --p-color-1: #e1f5fe;
+            --p-color-2: #fffde7;
+            --p-color-3: #f3e5f5;
+            --p-color-4: #fff1f3;
+            --p-color-5: #f1f8e9;
+            --p-color-6: #fff8e1;
+            --p-color-7: #f5f5f5;
+
+            --bg-top: #ffd700;
+            --bg-bottom: #a0d8ef;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'serif', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            touch-action: none;
+            overflow: hidden;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+            transition: background 2s ease;
+        }
+
+        #game-screen {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+            visibility: hidden;
+        }
+
+        #dialogue-area {
+            background: var(--panel-bg);
+            margin-bottom: 8px;
+            padding: 12px;
+            border-radius: 12px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            border: 3px solid #888;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .speaker-emoji { font-size: 2.2rem; margin-right: 12px; flex-shrink: 0; background: #fff; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border: 2px solid #ccc; }
+        .quote-text { font-style: normal; font-size: 0.85rem; flex: 1; line-height: 1.4; font-weight: bold; }
+
+        header {
+            background: var(--panel-bg);
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 8px;
+        }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+
+        #hint-btn {
+            background: var(--hint-gold);
+            border: 2px solid #b8860b;
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #timer-container {
+            width: 100%;
+            height: 24px;
+            background: #333;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.1s linear;
+        }
+
+        #timer-text-overlay {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 24px;
+            z-index: 2;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            background: rgba(0,0,0,0.15);
+            padding: 6px;
+            border-radius: 10px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        .tile {
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+            position: relative;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .tile.selected { transform: scale(1.1); outline: 3px solid var(--hint-gold); z-index: 10; }
+        
+        .tile.hint-highlight {
+            animation: hint-pulse 0.5s ease-in-out infinite alternate;
+            z-index: 5;
+            outline: 4px solid var(--hint-gold);
+        }
+        @keyframes hint-pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        .tile.last-target-glow { animation: target-glow 1s ease-in-out infinite; border: 2px solid var(--mission-glow); }
+        @keyframes target-glow { 0%, 100% { box-shadow: 0 0 5px var(--mission-glow); } 50% { box-shadow: 0 0 15px var(--mission-glow); } }
+
+        .tile.gift-panel { background: #fff0f5 !important; animation: gift-shake 1.5s ease-in-out infinite; border: 2px solid var(--gift-pink); z-index: 20; }
+        @keyframes gift-shake { 0%, 100% { transform: scale(1) rotate(0); } 10%, 20% { transform: scale(1.1) rotate(-3deg); } 30%, 50%, 70% { transform: scale(1.1) rotate(3deg); } 40%, 60% { transform: scale(1.1) rotate(-3deg); } 80% { transform: scale(1) rotate(0); } }
+
+        .tile.eliminating { animation: pop 0.3s forwards; pointer-events: none; }
+        @keyframes pop { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+
+        #story-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .btn-start {
+            background: var(--heart-red);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 6px 0 #9d252f;
+            min-width: 250px;
+        }
+
+        .btn-retry {
+            background: var(--retry-blue);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 6px 0 #3a8ccb;
+            min-width: 250px;
+            display: none;
+        }
+
+        .mission-item {
+            background: #fff;
+            padding: 4px 10px;
+            border-radius: 15px;
+            border: 2px solid #ccc;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-dark);
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            z-index: 1000;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+        }
+        @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        .celebrate-text { animation: bounce 1s infinite alternate; color: var(--clear-gold); }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div id=&quot;game-screen&quot;&gt;
+    &lt;div id=&quot;dialogue-area&quot;&gt;
+        &lt;div class=&quot;speaker-emoji&quot; id=&quot;speaker-emoji&quot;&gt;ð±ð»ââï¸&lt;/div&gt;
+        &lt;div class=&quot;quote-text&quot; id=&quot;quote-text&quot;&gt;...&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;header&gt;
+        &lt;div class=&quot;header-top&quot;&gt;
+            &lt;button id=&quot;hint-btn&quot;&gt;ð¡ ãã³ã (3)&lt;/button&gt;
+            &lt;div style=&quot;text-align:center&quot;&gt;
+                &lt;div id=&quot;stage-num-label&quot; style=&quot;font-size:12px; opacity:0.7&quot;&gt;Stage 1&lt;/div&gt;
+                &lt;div id=&quot;stage-name&quot; class=&quot;stage-title&quot; style=&quot;font-weight:bold&quot;&gt;...&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div style=&quot;font-weight:bold&quot;&gt;Score: &lt;span id=&quot;score-num&quot;&gt;0&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div id=&quot;mission-list&quot; style=&quot;display:flex; justify-content:center; gap:8px; margin-top:10px; flex-wrap: wrap;&quot;&gt;&lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;div id=&quot;timer-container&quot;&gt;
+        &lt;div id=&quot;timer-text-overlay&quot;&gt;&lt;span id=&quot;time-left-val&quot;&gt;60&lt;/span&gt;s&lt;/div&gt;
+        &lt;div id=&quot;timer-bar&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id=&quot;board&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;story-overlay&quot;&gt;
+    &lt;div id=&quot;story-icon&quot; style=&quot;font-size:5rem; margin-bottom: 10px;&quot;&gt;ð&lt;/div&gt;
+    &lt;h1 id=&quot;story-title&quot; style=&quot;margin: 0 0 10px 0;&quot;&gt;ä¸æè&shy;°ã®å½ã®ã¢ãªã¹&lt;/h1&gt;
+    &lt;p id=&quot;story-text&quot; style=&quot;font-size: 1.1rem; line-height: 1.6; max-width: 450px; min-height: 60px; margin: 0;&quot;&gt;&lt;/p&gt;
+    &lt;div id=&quot;instruction-area&quot; style=&quot;font-size: 0.9rem; margin-top: 20px; opacity: 0.8;&quot;&gt;&lt;/div&gt;
+    &lt;button id=&quot;main-action-btn&quot; class=&quot;btn-start&quot;&gt;ã²ã¼ã&nbsp;ãå§ãã&lt;/button&gt;
+    &lt;button id=&quot;retry-btn&quot; class=&quot;btn-retry&quot;&gt;ãã®ã¹ãã¼ã¸ãããç´ã&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+    const COLOR_PALETTE = [
+        'var(--p-color-1)', 'var(--p-color-2)', 'var(--p-color-3)', 
+        'var(--p-color-4)', 'var(--p-color-5)', 'var(--p-color-6)', 
+        'var(--p-color-7)'
+    ];
+
+    const BG_TIME_COLORS = [
+        { top: &quot;#ffd700&quot;, bottom: &quot;#a0d8ef&quot; }, // Stage 1
+        { top: &quot;#ffed4a&quot;, bottom: &quot;#a5e1f5&quot; }, // Stage 2
+        { top: &quot;#ffdf5e&quot;, bottom: &quot;#ade4f7&quot; }, // Stage 3
+        { top: &quot;#ffcc66&quot;, bottom: &quot;#bce9f9&quot; }, // Stage 4
+        { top: &quot;#ff9966&quot;, bottom: &quot;#ccefff&quot; }, // Stage 5
+        { top: &quot;#ff7f50&quot;, bottom: &quot;#d6f2ff&quot; }, // Stage 6
+        { top: &quot;#ff6347&quot;, bottom: &quot;#87ceeb&quot; }, // Stage 7
+        { top: &quot;#ff4500&quot;, bottom: &quot;#4682b4&quot; }, // Stage 8
+        { top: &quot;#db7093&quot;, bottom: &quot;#2f4f4f&quot; }, // Stage 9
+        { top: &quot;#4b0082&quot;, bottom: &quot;#191970&quot; }  // Stage 10
+    ];
+
+    const STAGES = [
+        { name: &quot;é»éã®æ¼ä¸ãã&quot;, symbol: &quot;ð±ð»ââï¸&quot;, panels: ['ð±ð»ââï¸', 'ð¸', 'ð', 'ð³', 'ð¦', 'ð', 'ð'], startText: &quot;ããªãã¦éå±ãªåå¾ããããçµµã®ãªãæ¬ãªãã¦ãä½ã®å½¹ã«ãç«ããªãããã&quot;, clearText: &quot;ãããæãçãã¦ãµã®ãèµ°ã£ã¦ãããï¼è¿½ããããªããï¼&quot;, quotes: [{ s: &quot;ð±ð»ââï¸&quot;, t: &quot;ããå§ãã¾ã®æ¬ã«ã¯ãçµµãä¼è©±ããªãã®ã&shy;ãã&quot; }] },
+        { name: &quot;ã¦ãµã®ã®ç©´ã¸è½ä¸&quot;, symbol: &quot;ð³ï¸&quot;, panels: ['ð³ï¸', 'ð°ï¸', 'ð', 'ðºï¸', 'ðª', 'ðï¸', 'ð'], startText: &quot;ã¢ãªã¹ã¯æ·±ãç©´ãè½ã¡ã¦ããã¾ããå¨ãã«ã¯ä¸æè&shy;°ãªãã®ãããããæµ®ãã¦ãã¾ãã&quot;, clearText: &quot;ãã£ã¨å°é¢ã«çããããå°ããªéµãè¦ã¤ããããã©ãã©ãã«ä½¿ãã®ãããï¼&quot;, quotes: [{ s: &quot;ð±ð»ââï¸&quot;, t: &quot;ããã¤ã¾ã§è½ã¡ãã®ããããå°çãçªãæãã¡ããï¼ã&quot; }] },
+        { name: &quot;æ¶ã®æ±&nbsp;&quot;, symbol: &quot;ð§&quot;, panels: ['ð§', 'ð&shy;', 'ð¦', 'ð¤', 'ð«', 'ð§¤', 'ð¶'], startText: &quot;æ³£ãããã¦é¨å±ãæ¶ã®æ±&nbsp;ã«ãªã£ã¡ãã£ãï¼åç©ãã¡ã¨ä¸ç·ã«æ³³ãã§å²¸ãç®æãã¾ãããã&quot;, clearText: &quot;ãµãããªãã¨ãå²¸ã«ãã©ãçããããã¿ããªã³ããæ¿¡ãã&shy;ã&quot;, quotes: [{ s: &quot;ð&shy;&quot;, t: &quot;ããããªã«ãã·ã£ãã·ã£ããªãã§ããï¼ã&quot; }] },
+        { name: &quot;ç½ã¦ãµã®ã®å®¶&quot;, symbol: &quot;ð&nbsp;&quot;, panels: ['ð&nbsp;', 'ð°', 'ð¼', 'ð', 'ð¥', 'ðª', 'ð§¤'], startText: &quot;ã¦ãµã®ããã®å®¶ã§ã±ã¼ã&shy;ãé£ã¹ãããèãè¶³ãçªããçªãåºãã»ã©å¤§ãããªã£ã¡ãã£ãï¼&quot;, clearText: &quot;é&shy;æ³ã®ã¯ãã&shy;ã¼ã§ãªãã¨ãåã®å¤§ããã«æ»ããããæ¥ãã§éããªããï¼&quot;, quotes: [{ s: &quot;ð&quot;, t: &quot;ãã¡ã¢ãªã¼ã»ã¢ã³ï¼ç§ã®æè¢ã¯ã©ãã&nbsp;ï¼ã&quot; }] },
+        { name: &quot;ã¤ã¢ã&nbsp;ã·ã®å©è¨&quot;, symbol: &quot;ð&quot;, panels: ['ð', 'ð', 'ð¸ï¸', 'ð¬', 'ðª¨', 'ð²', 'ð¿'], startText: &quot;æ£®ã®ä¸&shy;ã§åºä¼ã£ãã®ã¯ãå·¨å¤§ãªã&shy;ãã³ã®ä¸ã§æ°´ã¿ãã³ãå¹ããã¤ã¢ã&nbsp;ã·ããã§ããã&quot;, clearText: &quot;ãçå´ã§èãä¼¸ã³ãåå¯¾å´ã§ç¸®ãããã&shy;ãã³ã®ç§å¯ãæãã£ããã&quot;, quotes: [{ s: &quot;ð&quot;, t: &quot;ããåã¯...ã&nbsp;ããã&nbsp;ï¼ã&quot; }] },
+        { name: &quot;å¬çµå¤«äººã®å°æ&quot;, symbol: &quot;ð³&quot;, panels: ['ð³', 'ð¥£', 'ð§', 'ð', 'ð©âð³', 'ð', 'ð¸'], startText: &quot;ã³ã·ã§ã¦ãèãæ£ãã²ã©ãå°æï¼èµ¤ã¡ããã¯ãã¼ãã¼é³´ãããæçäººã¯æã£ã¦ãããã&quot;, clearText: &quot;èµ¤ã¡ãããè±ã«ãªã£ã¡ãã£ããããã¦ãæ¨ã®ä¸ã«ãã¤ãã¤ç¬ãç«ã...ã&quot;, quotes: [{ s: &quot;ð©âð³&quot;, t: &quot;ããã£ã¨ã³ã·ã§ã¦ãå¥ããï¼ã¹ã¼ããè¶³ããªãï¼ã&quot; }] },
+        { name: &quot;çã£ããè¶ä¼&quot;, symbol: &quot;ð©&quot;, panels: ['ð©', 'â', 'ð«', 'ðª', 'ð&shy;', 'ð', 'ð'], startText: &quot;ãå¸&shy;ã¯ãªããï¼ãã¨è¨ããã¡ãã£ããä¸æã¦ãµã®ã¨å¸½å&shy;å±ã®çã£ããè¶ä¼ã§ãã&quot;, clearText: &quot;ãªãã¦å¤±ç¤¼ãªãè¶ä¼ï¼ããäºåº¦ã¨æ¥ããã®ã§ããï¼&quot;, quotes: [{ s: &quot;ð©&quot;, t: &quot;ãã«ã©ã¹ã¨æ¸ãç©æºãä¼¼ã¦ããã®ã¯ãªãã&nbsp;ï¼ã&quot; }] },
+        { name: &quot;å¥³çã®ãã©ã®åº&shy;&quot;, symbol: &quot;ð¹&quot;, panels: ['ð¹', 'ð¤', 'ðï¸', 'â&nbsp;ï¸', 'â£ï¸', 'ð', 'ð'], startText: &quot;ãã©ã³ãã®åµéãããã¡ããç½ããã©ãå¿æ&shy;»ã«èµ¤ãå¡ã£ã¦ãã¾ããå¥³çæ§ãæ¥ãåã«ï¼&quot;, clearText: &quot;ãèµ¤ãå¡ãï¼èµ¤ãå¡ãï¼ã...ããå¥³çæ§ãããã£ããã£ããï¼&quot;, quotes: [{ s: &quot;â&nbsp;ï¸&quot;, t: &quot;ãééãã¦ç½ãæ¤ãããé¦ãã¯ã&shy;ããã¡ã¾ãï¼ã&quot; }] },
+        { name: &quot;å¥³çã®ã¯ã&shy;ã±ã¼å&nbsp;´&quot;, symbol: &quot;â¥ï¸&quot;, panels: ['â¥ï¸', 'ð¦©', 'ð¦', 'ð', 'ð°', 'ð©', 'âï¸'], startText: &quot;çä¸å°½ãªã¯ã&shy;ã±ã¼å¤§ä¼ããã©ãã³ã´ããã¬ããã§ãããªããºãããã¼ã«ãï¼&quot;, clearText: &quot;ã¿ããªèªåã®é¦ãå®ãã®ã«å¿æ&shy;»ã&shy;ãã¢ãªã¹ãéãåºããªããï¼&quot;, quotes: [{ s: &quot;â¥ï¸&quot;, t: &quot;ãããã¤ã®é¦ãã¯ã&shy;ãï¼(Off with her head!)ã&quot; }] },
+        { name: &quot;æå¾ã®è£å¤ã¨ç®è¦ã&quot;, symbol: &quot;âï¸&quot;, panels: ['ð¥§', 'âï¸', 'ð', 'ðº', 'ð', 'ð±ð»ââï¸', 'âï¸'], startText: &quot;ãã¼ãã®ã¿ã«ããçãã&nbsp;ã®ã¯èª°ï¼ è£å¤ãå§ã¾ã£ãããã©ãã¿ããªãã&nbsp;ã®ãã©ã³ãã&nbsp;ãï¼&quot;, clearText: &quot;ãããããã¡ãªãã¦ãã©ã³ãã®æãããªãï¼ã...ãããå§ã¡ããã®èã®ä¸ã&nbsp;ã£ããã&quot;, quotes: [{ s: &quot;âï¸&quot;, t: &quot;ãå¤æ±ºãåã&nbsp;ï¼å¯©è&shy;°ã¯å¾åãã«ããï¼ã&quot; }, { s: &quot;ð±ð»ââï¸&quot;, t: &quot;ãç§ã¯ããå¤§ãããªã£ãããããªããã¡ã¯æããªãï¼ã&quot; }], isFinal: true }
+    ];
+
+    let currentStage = 0;
+    let timeLeft = 60;
+    let score = 0;
+    let hintCount = 3;
+    let removedTotal = 0;
+    let isGameFinished = false; 
+    let isProcessing = false;
+    let dragStart = null;
+    let gameInterval = null;
+    let quoteInterval = null;
+    let typingTimer = null;
+    let fullText = &quot;&quot;;
+    let missions = {};
+    let board = [];
+    let giftPositions = []; 
+    const GIFT_THRESHOLD = 30;
+
+    const storyOverlay = document.getElementById('story-overlay');
+    const mainBtn = document.getElementById('main-action-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const storyText = document.getElementById('story-text');
+    const instructionArea = document.getElementById('instruction-area');
+    const gameScreen = document.getElementById('game-screen');
+    const boardEl = document.getElementById('board');
+    const timerBar = document.getElementById('timer-bar');
+    const timeText = document.getElementById('time-left-val');
+    const scoreText = document.getElementById('score-num');
+    const storyIcon = document.getElementById('story-icon');
+    const storyTitle = document.getElementById('story-title');
+
+    window.onload = () =&gt; {
+        updateBackground();
+        showTitleScreen();
+        mainBtn.onclick = onMainButtonClick;
+        retryBtn.onclick = onRetryButtonClick;
+        document.getElementById('hint-btn').onclick = useHint;
+
+        boardEl.addEventListener('mousedown', onStart);
+        boardEl.addEventListener('touchstart', (e) =&gt; { e.preventDefault(); onStart(e.touches[0]); }, {passive: false});
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', (e) =&gt; { if(storyOverlay.style.display !== 'flex') onMove(e.touches[0]); }, {passive: false});
+        window.addEventListener('mouseup', onEnd);
+        window.addEventListener('touchend', onEnd);
+    };
+
+    function updateBackground() {
+        const colors = BG_TIME_COLORS[currentStage] || BG_TIME_COLORS[0];
+        document.body.style.setProperty('--bg-top', colors.top);
+        document.body.style.setProperty('--bg-bottom', colors.bottom);
+    }
+
+    function showTitleScreen() {
+        gameScreen.style.visibility = 'hidden';
+        storyOverlay.style.display = 'flex';
+        storyTitle.innerText = &quot;ä¸æè&shy;°ã®å½ã®ã¢ãªã¹&quot;;
+        storyText.innerText = &quot;ãç©èªã®ããºã«ã&quot;;
+        storyIcon.innerText = &quot;ð&quot;;
+        instructionArea.innerHTML = &quot;ããã«ãæãã¦ãç©èªã®ã¢ã¤ãã&nbsp;ãéãã¾ãããã&lt;br&gt;ã®ããããã«ðã¯ãç¤é¢ã®1ç¨®é¡ãå¨ã¦æ¶å»ãã¾ãï¼&quot;;
+        mainBtn.innerText = &quot;ã²ã¼ã&nbsp;ãå§ãã&quot;;
+    }
+
+    function setupOverlay(isClear) {
+        gameScreen.style.visibility = 'hidden';
+        storyOverlay.style.display = 'flex';
+        clearInterval(quoteInterval);
+        const stageData = STAGES[currentStage];
+        retryBtn.style.display = 'none';
+        
+        if (isClear) {
+            saveGiftPositions();
+            storyTitle.innerText = &quot;Stage Clear!&quot;;
+            storyTitle.classList.add('celebrate-text');
+            storyIcon.innerText = &quot;â¨&quot;;
+            createConfetti();
+            if (currentStage === STAGES.length - 1) {
+                mainBtn.innerText = &quot;æåããéã¶&quot;;
+                fullText = &quot;ããã§ã¨ãï¼ããªãã¯å¨ã¦ã®ä¸æè&shy;°ãè§£ãæããã¾ããã\næçµã¹ã³ã¢: &quot; + score;
+            } else {
+                mainBtn.innerText = &quot;æ¬¡ã®ã¹ãã¼ã¸ã¸&quot;;
+                fullText = stageData.clearText;
+            }
+        } else if (timeLeft &lt;= 0) {
+            storyTitle.innerText = &quot;Game Over&quot;;
+            storyIcon.innerText = &quot;ð¥&quot;;
+            fullText = &quot;ã¢ãªã¹ã¯è¿·å&shy;ã«ãªã£ã¦ãã¾ã£ãããã§ãâ¦ã&quot;;
+            mainBtn.innerText = &quot;ã¿ã¤ãã«ã¸æ»ã&quot;;
+            retryBtn.style.display = 'block';
+        } else {
+            storyTitle.innerText = `Stage ${currentStage + 1}`;
+            storyTitle.classList.remove('celebrate-text');
+            storyIcon.innerText = stageData.symbol;
+            fullText = stageData.startText;
+            mainBtn.innerText = &quot;ç©èªãå§ãã&quot;;
+        }
+        typeEffect(fullText);
+    }
+
+    function saveGiftPositions() {
+        giftPositions = [];
+        for (let r = 0; r &lt; 8; r++) {
+            for (let c = 0; c &lt; 8; c++) {
+                if (board[r][c] === 'ð') {
+                    giftPositions.push({ r, c });
+                }
+            }
+        }
+    }
+
+    function typeEffect(text) {
+        clearInterval(typingTimer);
+        storyText.innerText = &quot;&quot;;
+        let i = 0;
+        typingTimer = setInterval(() =&gt; {
+            if (i &lt; text.length) { storyText.innerText += text.charAt(i); i++; }
+            else { clearInterval(typingTimer); }
+        }, 30);
+    }
+
+    function onMainButtonClick() {
+        if (storyText.innerText.length &lt; fullText.length) {
+            clearInterval(typingTimer);
+            storyText.innerText = fullText;
+            return;
+        }
+
+        const btnText = mainBtn.innerText;
+        if (btnText === &quot;æ¬¡ã®ã¹ãã¼ã¸ã¸&quot;) {
+            currentStage++;
+            updateBackground();
+            timeLeft = 60;
+            isGameFinished = false;
+            setupOverlay(false); // æ¬¡ã®ã¹ãã¼ã¸ã®ãéå§ç»é¢ããè¡¨ç¤º
+        } else if (btnText === &quot;ã¿ã¤ãã«ã¸æ»ã&quot; || btnText === &quot;æåããéã¶&quot;) {
+            currentStage = 0; timeLeft = 60; score = 0; scoreText.innerText = &quot;0&quot;;
+            giftPositions = [];
+            updateBackground();
+            showTitleScreen();
+        } else if (btnText === &quot;ç©èªãå§ãã&quot; || btnText === &quot;ã²ã¼ã&nbsp;ãå§ãã&quot;) {
+            startGame();
+        }
+    }
+
+    function onRetryButtonClick() {
+        timeLeft = 60; score = 0; scoreText.innerText = &quot;0&quot;;
+        giftPositions = [];
+        startGame();
+    }
+
+    function startGame() {
+        storyOverlay.style.display = 'none';
+        gameScreen.style.visibility = 'visible';
+        hintCount = 3; removedTotal = 0; isGameFinished = false;
+        updateHintBtn();
+        initMissions();
+        initBoard();
+        startTimer();
+        startQuotes();
+    }
+
+    function startQuotes() {
+        updateQuote();
+        clearInterval(quoteInterval);
+        quoteInterval = setInterval(updateQuote, 4000);
+    }
+
+    function updateQuote() {
+        const stage = STAGES[currentStage];
+        const quoteObj = stage.quotes[Math.floor(Math.random() * stage.quotes.length)];
+        document.getElementById('speaker-emoji').innerText = quoteObj.s;
+        document.getElementById('quote-text').innerText = quoteObj.t;
+    }
+
+    function startTimer() {
+        clearInterval(gameInterval);
+        gameInterval = setInterval(() =&gt; {
+            if (storyOverlay.style.display === 'flex') return;
+            timeLeft -= 0.1;
+            if (timeLeft &lt;= 0) { timeLeft = 0; gameOver(); }
+            updateTimerUI();
+        }, 100);
+    }
+
+    function updateTimerUI() {
+        const p = (timeLeft / 60) * 100;
+        timerBar.style.width = p + &quot;%&quot;;
+        timeText.innerText = Math.ceil(timeLeft);
+    }
+
+    function getPanelColor(emoji) {
+        const panels = STAGES[currentStage].panels;
+        const index = panels.indexOf(emoji);
+        if (emoji === 'ð') return 'var(--gift-pink)';
+        return index !== -1 ? COLOR_PALETTE[index % COLOR_PALETTE.length] : '#fff';
+    }
+
+    function initMissions() {
+        const stage = STAGES[currentStage];
+        const list = document.getElementById('mission-list');
+        list.innerHTML = '';
+        missions = {};
+        
+        let targets;
+        if (stage.isFinal) {
+            targets = ['ð¥§', 'ð', 'ð±ð»ââï¸'];
+        } else {
+            targets = [stage.panels[0], stage.panels[stage.panels.length-1]];
+        }
+        
+        targets.forEach(emoji =&gt; {
+            missions[emoji] = 12;
+            const item = document.createElement('div');
+            item.className = 'mission-item';
+            item.id = 'mission-' + emoji;
+            item.style.backgroundColor = getPanelColor(emoji);
+            item.innerHTML = `&lt;span&gt;${emoji}&lt;/span&gt;: &lt;span class=&quot;m-count&quot;&gt;${missions[emoji]}&lt;/span&gt;`;
+            list.appendChild(item);
+        });
+        document.getElementById('stage-name').innerText = stage.name;
+        document.getElementById('stage-num-label').innerText = `Stage ${currentStage + 1}`;
+    }
+
+    function initBoard() {
+        const panels = STAGES[currentStage].panels;
+        boardEl.innerHTML = '';
+        board = [];
+        for (let r = 0; r &lt; 8; r++) {
+            board[r] = [];
+            for (let c = 0; c &lt; 8; c++) {
+                const isGiftPos = giftPositions.some(pos =&gt; pos.r === r &amp;&amp; pos.c === c);
+                if (isGiftPos) {
+                    board[r][c] = 'ð';
+                    continue;
+                }
+                let p;
+                do { p = panels[Math.floor(Math.random() * panels.length)]; }
+                while ((r &gt;= 2 &amp;&amp; board[r-1][c] === p &amp;&amp; board[r-2][c] === p) || (c &gt;= 2 &amp;&amp; board[r][c-1] === p &amp;&amp; board[r][c-2] === p));
+                board[r][c] = p;
+            }
+        }
+        render(true);
+    }
+
+    function render(isFullInit = false) {
+        if (isFullInit) boardEl.innerHTML = '';
+        for (let r = 0; r &lt; 8; r++) {
+            for (let c = 0; c &lt; 8; c++) {
+                let t = document.getElementById(`tile-${r}-${c}`);
+                if (isFullInit &amp;&amp; !t) {
+                    t = document.createElement('div');
+                    t.id = `tile-${r}-${c}`;
+                    t.dataset.r = r; t.dataset.c = c;
+                    boardEl.appendChild(t);
+                }
+                const p = board[r][c];
+                t.innerText = p || &quot;&quot;;
+                t.className = 'tile';
+                t.style.backgroundColor = getPanelColor(p);
+                if(p === 'ð') t.classList.add('gift-panel');
+                else t.classList.remove('gift-panel');
+            }
+        }
+        updateGlow();
+    }
+
+    function updateGlow() {
+        const activeMissions = Object.keys(missions).filter(k =&gt; missions[k] &gt; 0);
+        const allTiles = document.querySelectorAll('.tile');
+        allTiles.forEach(t =&gt; t.classList.remove('last-target-glow'));
+        if (activeMissions.length === 1) {
+            allTiles.forEach(t =&gt; { if (t.innerText === activeMissions[0]) t.classList.add('last-target-glow'); });
+        }
+    }
+
+    function onStart(e) {
+        if (isProcessing || isGameFinished) return;
+        const t = e.target.closest('.tile');
+        if (!t) return;
+        document.querySelectorAll('.hint-highlight').forEach(el =&gt; el.classList.remove('hint-highlight'));
+        if (t.innerText === 'ð') { useGift(parseInt(t.dataset.r), parseInt(t.dataset.c)); return; }
+        dragStart = { r: parseInt(t.dataset.r), c: parseInt(t.dataset.c), x: e.clientX || e.pageX, y: e.clientY || e.pageY, el: t };
+        t.classList.add('selected');
+    }
+
+    async function useGift(r, c) {
+        isProcessing = true;
+        const currentTypes = [...new Set(board.flat())].filter(p =&gt; p &amp;&amp; p !== 'ð');
+        if (currentTypes.length === 0) { isProcessing = false; return; }
+        const targetType = currentTypes[Math.floor(Math.random() * currentTypes.length)];
+        board[r][c] = null;
+        document.getElementById(`tile-${r}-${c}`).classList.add('eliminating');
+        for (let i = 0; i &lt; 8; i++) {
+            for (let j = 0; j &lt; 8; j++) {
+                if (board[i][j] === targetType) {
+                    if (missions[targetType] !== undefined &amp;&amp; missions[targetType] &gt; 0) missions[targetType]--;
+                    score += 15; board[i][j] = null;
+                    document.getElementById(`tile-${i}-${j}`).classList.add('eliminating');
+                }
+            }
+        }
+        scoreText.innerText = score; updateMissionUI();
+        await new Promise(res =&gt; setTimeout(res, 400));
+        dropTiles(); render(); await processMatches();
+    }
+
+    function onMove(e) {
+        if (!dragStart || isProcessing || isGameFinished) return;
+        const curX = e.clientX || e.pageX; const curY = e.clientY || e.pageY;
+        const dx = curX - dragStart.x; const dy = curY - dragStart.y;
+        if (Math.abs(dx) &gt; 25 || Math.abs(dy) &gt; 25) {
+            let tr = dragStart.r, tc = dragStart.c;
+            if (Math.abs(dx) &gt; Math.abs(dy)) tc += dx &gt; 0 ? 1 : -1;
+            else tr += dy &gt; 0 ? 1 : -1;
+            if (tr &gt;= 0 &amp;&amp; tr &lt; 8 &amp;&amp; tc &gt;= 0 &amp;&amp; tc &lt; 8) {
+                const r1 = dragStart.r, c1 = dragStart.c;
+                dragStart.el.classList.remove('selected'); dragStart = null;
+                handleSwap(r1, c1, tr, tc);
+            }
+        }
+    }
+
+    function onEnd() { if (dragStart) { dragStart.el.classList.remove('selected'); dragStart = null; } }
+
+    async function handleSwap(r1, c1, r2, c2) {
+        isProcessing = true;
+        const p1 = board[r1][c1], p2 = board[r2][c2];
+        board[r1][c1] = p2; board[r2][c2] = p1; render();
+        const matches = findMatches();
+        if (matches.length &gt; 0) { await processMatches(); }
+        else { await new Promise(res =&gt; setTimeout(res, 200)); board[r1][c1] = p1; board[r2][c2] = p2; render(); isProcessing = false; }
+    }
+
+    function findMatches() {
+        let m = [];
+        for (let r = 0; r &lt; 8; r++) {
+            for (let c = 0; c &lt; 6; c++) {
+                if (board[r][c] &amp;&amp; board[r][c] !== 'ð' &amp;&amp; board[r][c] === board[r][c+1] &amp;&amp; board[r][c] === board[r][c+2]) m.push({r,c}, {r,c:c+1}, {r,c:c+2});
+            }
+        }
+        for (let c = 0; c &lt; 8; c++) {
+            for (let r = 0; r &lt; 6; r++) {
+                if (board[r][c] &amp;&amp; board[r][c] !== 'ð' &amp;&amp; board[r][c] === board[r+1][c] &amp;&amp; board[r][c] === board[r+2][c]) m.push({r,c}, {r:r+1,c}, {r:r+2,c});
+            }
+        }
+        return m.filter((v, i, a) =&gt; a.findIndex(t =&gt; t.r === v.r &amp;&amp; t.c === v.c) === i);
+    }
+
+    async function processMatches() {
+        if (isGameFinished) return;
+        let matches = findMatches();
+        while (matches.length &gt; 0) {
+            matches.forEach(pos =&gt; {
+                const p = board[pos.r][pos.c];
+                if (p) {
+                    if (missions[p] !== undefined &amp;&amp; missions[p] &gt; 0) missions[p]--;
+                    score += 10; removedTotal++;
+                    document.getElementById(`tile-${pos.r}-${pos.c}`).classList.add('eliminating');
+                    board[pos.r][pos.c] = null;
+                }
+            });
+            if (removedTotal &gt;= GIFT_THRESHOLD) { removedTotal -= GIFT_THRESHOLD; spawnGift(); }
+            scoreText.innerText = score; updateMissionUI();
+            await new Promise(res =&gt; setTimeout(res, 350));
+            dropTiles(); render();
+            await new Promise(res =&gt; setTimeout(res, 200));
+            matches = findMatches();
+        }
+        checkClearStatus(); isProcessing = false;
+    }
+
+    function checkClearStatus() {
+        if (!isGameFinished &amp;&amp; Object.values(missions).every(v =&gt; v &lt;= 0)) {
+            isGameFinished = true; clearInterval(gameInterval);
+            setTimeout(() =&gt; setupOverlay(true), 500);
+        }
+    }
+
+    function spawnGift() {
+        let r, c; do { r = Math.floor(Math.random() * 8); c = Math.floor(Math.random() * 8); } while (board[r][c] === 'ð');
+        board[r][c] = 'ð';
+    }
+
+    function dropTiles() {
+        const panels = STAGES[currentStage].panels;
+        for (let c = 0; c &lt; 8; c++) {
+            let empty = 0;
+            for (let r = 7; r &gt;= 0; r--) {
+                if (board[r][c] === null) empty++;
+                else if (empty &gt; 0) { board[r+empty][c] = board[r][c]; board[r][c] = null; }
+            }
+            for (let r = 0; r &lt; empty; r++) { board[r][c] = panels[Math.floor(Math.random() * panels.length)]; }
+        }
+    }
+
+    function updateMissionUI() {
+        for (const emoji in missions) {
+            const el = document.getElementById('mission-' + emoji);
+            if (el) el.querySelector('.m-count').innerText = Math.max(0, missions[emoji]);
+        }
+    }
+
+    function updateHintBtn() {
+        const b = document.getElementById('hint-btn');
+        b.innerText = `ð¡ ãã³ã (${hintCount})`;
+        b.disabled = hintCount &lt;= 0;
+    }
+
+    function useHint() {
+        if (hintCount &lt;= 0 || isProcessing || isGameFinished) return;
+        for (let r = 0; r &lt; 8; r++) {
+            for (let c = 0; c &lt; 8; c++) {
+                if (c &lt; 7 &amp;&amp; checkPotentialMatch(r, c, r, c + 1)) { highlight(r, c, r, c + 1); hintCount--; updateHintBtn(); return; }
+                if (r &lt; 7 &amp;&amp; checkPotentialMatch(r, c, r + 1, c)) { highlight(r, c, r + 1, c); hintCount--; updateHintBtn(); return; }
+            }
+        }
+    }
+
+    function checkPotentialMatch(r1, c1, r2, c2) {
+        const p1 = board[r1][c1]; const p2 = board[r2][c2];
+        if (!p1 || !p2 || p1 === 'ð' || p2 === 'ð' || p1 === p2) return false;
+        board[r1][c1] = p2; board[r2][c2] = p1;
+        const m = findMatches();
+        board[r1][c1] = p1; board[r2][c2] = p2;
+        return m.length &gt; 0;
+    }
+
+    function highlight(r1, c1, r2, c2) {
+        const t1 = document.getElementById(`tile-${r1}-${c1}`);
+        const t2 = document.getElementById(`tile-${r2}-${c2}`);
+        t1.classList.add('hint-highlight'); t2.classList.add('hint-highlight');
+        setTimeout(() =&gt; { t1.classList.remove('hint-highlight'); t2.classList.remove('hint-highlight'); }, 3000);
+    }
+
+    function createConfetti() {
+        for (let i = 0; i &lt; 30; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            c.style.animationDelay = Math.random() * 2 + 's';
+            storyOverlay.appendChild(c);
+            setTimeout(() =&gt; c.remove(), 3000);
+        }
+    }
+
+    function gameOver() { clearInterval(gameInterval); clearInterval(quoteInterval); setupOverlay(false); }
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</body>
+</html>
